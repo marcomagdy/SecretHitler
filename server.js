@@ -3,11 +3,18 @@
 const express = require('express');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
 const { DatabaseSync } = require('node:sqlite');
 
 // --- Database -------------------------------------------------------------
 
-const db = new DatabaseSync(path.join(__dirname, 'secret_hitler.db'));
+// On Glitch, .data/ is the persistent writable directory; elsewhere use __dirname.
+const dataDir = path.join(__dirname, '.data');
+const DB_PATH = fs.existsSync(dataDir)
+  ? path.join(dataDir, 'secret_hitler.db')
+  : path.join(__dirname, 'secret_hitler.db');
+
+const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA journal_mode = WAL;');
 db.exec(`
   CREATE TABLE IF NOT EXISTS games (
