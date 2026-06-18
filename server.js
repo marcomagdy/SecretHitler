@@ -230,6 +230,28 @@ app.post('/api/games/:id/new-round', (req, res) => {
   res.json({ ok: true, round });
 });
 
+// Database stats — total games and player count per game.
+app.get('/api/stats', (req, res) => {
+  const games = db.prepare(`
+    SELECT g.id, g.current_round, g.created_at,
+           COUNT(p.id) AS player_count
+    FROM games g
+    LEFT JOIN players p ON p.game_id = g.id
+    GROUP BY g.id
+    ORDER BY g.created_at DESC
+  `).all();
+
+  res.json({
+    gameCount: games.length,
+    games: games.map((g) => ({
+      gameId: g.id,
+      round: g.current_round,
+      playerCount: g.player_count,
+      createdAt: new Date(g.created_at).toISOString(),
+    })),
+  });
+});
+
 const os = require('node:os');
 
 function lanAddress() {
