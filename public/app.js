@@ -134,6 +134,11 @@ async function newRound() {
 
 function leaveGame() {
   stopPolling();
+  // Fire-and-forget: tell the server the player left before wiping local state.
+  if (gameId && playerId) {
+    api('DELETE', `/api/games/${encodeURIComponent(gameId)}/players/${encodeURIComponent(playerId)}`)
+      .catch(() => {});
+  }
   gameId = LS.gameId = null;
   playerId = LS.playerId = null;
   setGameTag(null);

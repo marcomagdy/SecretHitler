@@ -93,11 +93,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const normCode = (s) => String(s || '').trim().toUpperCase();
 
+function pruneOldGames() {
+  const cutoff = Date.now() - 12 * 60 * 60 * 1000; // 12 hours ago
+  const old = db.prepare('SELECT id FROM games WHERE created_at < ?').all(cutoff);
+  if (old.length === 0) return;
+  const ids = old.map((g) => g.id);
+  const placeholders = ids.map(() => '?').join(',');
+  db.prepare(`DELETE FROM players WHERE game_id IN (${placeholders})`).run(...ids);
+  db.prepare(`DELETE FROM games WHERE id IN (${placeholders})`).run(...ids);
+  console.log(`Pruned ${ids.length} old game(s): ${ids.join(', ')}`);
+}
+
 // Create a game session.
 app.post('/api/games', (req, res) => {
   const id = generateGameCode();
   db.prepare('INSERT INTO games (id, current_round, created_at) VALUES (?, 1, ?)')
     .run(id, Date.now());
+
+  // ~1-in-10 chance to prune games older than 12 hours.
+  if (crypto.randomInt(1, 11) === 7) pruneOldGames();
+
   res.json({ gameId: id });
 });
 
@@ -118,6 +133,19 @@ app.post('/api/games/:id/join', (req, res) => {
   ).run(playerId, gameId, name, Date.now());
 
   res.json({ playerId, gameId });
+});
+
+// Remove a player from the game (they left voluntarily).
+app.delete('/api/games/:id/players/:playerId', (req, res) => {
+  const gameId = normCode(req.params.id);
+  const { playerId } = req.params;
+
+  const info = db
+    .prepare('DELETE FROM players WHERE id = ? AND game_id = ?')
+    .run(playerId, gameId);
+
+  if (info.changes === 0) return res.status(404).json({ error: 'Player not found' });
+  res.json({ ok: true });
 });
 
 // Submit (or change) the calling player's role for the current round.
