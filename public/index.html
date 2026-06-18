@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Secret Hitler — Roles</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1 class="logo">Secret&nbsp;Hitler</h1>
+      <div id="gameTag" class="game-tag hidden"></div>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section id="home" class="screen active">
+        <p class="lead">Assign and confirm everyone's secret role.</p>
+        <div class="stack">
+          <button id="btnStart" class="btn btn-primary">Start a game</button>
+          <button id="btnJoinHome" class="btn btn-ghost">Join a game</button>
+        </div>
+      </section>
+
+      <!-- SHOW CODE (after Start) -->
+      <section id="show-code" class="screen">
+        <p class="lead">Share this code with your table:</p>
+        <div id="codeDisplay" class="code-display">—</div>
+        <div class="stack">
+          <button id="btnCopyCode" class="btn btn-ghost">Copy code</button>
+          <button id="btnCodeContinue" class="btn btn-primary">Continue</button>
+        </div>
+      </section>
+
+      <!-- JOIN -->
+      <section id="join" class="screen">
+        <p class="lead">Enter the 5-letter game code:</p>
+        <input id="joinCodeInput" class="input code-input" type="text"
+               inputmode="latin" autocomplete="off" autocapitalize="characters"
+               maxlength="5" placeholder="ABCDE" />
+        <p id="joinError" class="error"></p>
+        <div class="stack">
+          <button id="btnJoinSubmit" class="btn btn-primary">Join</button>
+          <button id="btnJoinBack" class="btn btn-ghost">Back</button>
+        </div>
+      </section>
+
+      <!-- NAME -->
+      <section id="name" class="screen">
+        <p class="lead">What's your name?</p>
+        <input id="nameInput" class="input" type="text" autocomplete="off"
+               maxlength="40" placeholder="Your name" />
+        <p id="nameError" class="error"></p>
+        <div class="stack">
+          <button id="btnNameSubmit" class="btn btn-primary">Continue</button>
+        </div>
+      </section>
+
+      <!-- ROLE -->
+      <section id="role" class="screen">
+        <p class="lead">Which card did you draw?</p>
+        <div class="role-grid">
+          <button class="role-card liberal" data-role="liberal">
+            <span class="role-name">Liberal</span>
+            <span class="role-sub">Loyal to the republic</span>
+          </button>
+          <button class="role-card fascist" data-role="fascist">
+            <span class="role-name">Fascist</span>
+            <span class="role-sub">Knows the team</span>
+          </button>
+          <button class="role-card hitler" data-role="hitler">
+            <span class="role-name">Hitler</span>
+            <span class="role-sub">Lead the Fascists</span>
+          </button>
+        </div>
+        <p class="hint">Keep it secret. The app only reveals what each role is allowed to know.</p>
+      </section>
+
+      <!-- WAITING -->
+      <section id="waiting" class="screen">
+        <p class="lead">Waiting for everyone to choose…</p>
+        <p id="waitingProgress" class="progress">—</p>
+        <ul id="waitingRoster" class="roster"></ul>
+        <p class="hint">Anyone can still join with code <strong id="waitingCode">—</strong>.</p>
+        <div class="stack">
+          <button id="btnLeaveWaiting" class="btn btn-ghost btn-small">Leave game</button>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results" class="screen">
+        <p class="lead">All roles are in.</p>
+        <div id="resultsCounts" class="counts"></div>
+        <p id="resultsBanner" class="banner"></p>
+        <div id="resultsYourRole" class="your-role"></div>
+        <div id="resultsReveal" class="reveal"></div>
+        <div class="stack">
+          <button id="btnNewRound" class="btn btn-primary">New round</button>
+          <button id="btnLeave" class="btn btn-ghost btn-small">Leave game</button>
+        </div>
+        <p class="hint">Game code: <strong id="resultsCode">—</strong></p>
+      </section>
+    </main>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

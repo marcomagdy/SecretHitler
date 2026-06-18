@@ -1,0 +1,16 @@
+{
+  "name": "secret-hitler-roles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Companion web app for assigning and confirming Secret Hitler roles.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
