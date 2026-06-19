@@ -68,7 +68,9 @@ sudo systemctl stop secret-hitler
 ## What setup.sh does
 
 1. Installs Node 22 (official `linux-{x64,arm64}` binary → `/usr/local`) if the
-   system Node is missing or < 22.5.
+   system Node is missing or < 22.5. It then probes whether this Node needs the
+   `--experimental-sqlite` flag for `node:sqlite` (required on e.g. 22.12,
+   unflagged on later releases) and bakes the right launch command into the unit.
 2. Creates a locked-down `secrethitler` system user (no shell, no home).
 3. Runs `npm ci --omit=dev` (only dependency is `express`).
 4. Creates a writable `.data/` dir for the SQLite file, owned by the service user,

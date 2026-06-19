@@ -63,6 +63,20 @@ fi
 export PATH="/usr/local/bin:${PATH}"
 NODE_BIN="$(command -v node)"
 
+# node:sqlite is gated behind --experimental-sqlite on some releases (e.g.
+# 22.12) and unflagged on others. Probe this Node and only pass the flag if
+# it is actually required, so the unit works across versions.
+SQLITE_FLAG=""
+if ! node -e 'require("node:sqlite")' >/dev/null 2>&1; then
+  if node --experimental-sqlite -e 'require("node:sqlite")' >/dev/null 2>&1; then
+    SQLITE_FLAG="--experimental-sqlite"
+  else
+    echo "Error: Node v$(node -p 'process.versions.node') cannot load node:sqlite." >&2
+    echo "Upgrade to Node >= 22.5 (re-run with the bundled installer)." >&2
+    exit 1
+  fi
+fi
+
 # 2. Locked-down service user (no shell, no home) ───────────────────────────
 if ! id -u "${SERVICE_USER}" >/dev/null 2>&1; then
   useradd --system --no-create-home --shell /usr/sbin/nologin "${SERVICE_USER}"
@@ -99,7 +113,7 @@ Type=simple
 User=${SERVICE_USER}
 Group=${SERVICE_USER}
 WorkingDirectory=${APP_DIR}
-ExecStart=${NODE_BIN} server.js
+ExecStart=${NODE_BIN} ${SQLITE_FLAG} server.js
 Environment=NODE_ENV=production
 Environment=PORT=${PORT}
 Restart=on-failure
