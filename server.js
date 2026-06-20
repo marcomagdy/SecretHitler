@@ -48,13 +48,13 @@ const DIST = {
 };
 
 // Code alphabet omits I and O to avoid confusion with 1 and 0.
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
 
 function generateGameCode() {
   const exists = db.prepare('SELECT 1 FROM games WHERE id = ?');
   for (let attempt = 0; attempt < 50; attempt++) {
     let code = '';
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       code += CODE_ALPHABET[crypto.randomInt(CODE_ALPHABET.length)];
     }
     if (!exists.get(code)) return code;
