@@ -81,7 +81,7 @@ function goJoin() {
 
 async function submitJoinCode() {
   const code = $('joinCodeInput').value.trim().toUpperCase();
-  if (code.length !== 5) { $('joinError').textContent = 'Enter the full 5-letter code.'; return; }
+  if (code.length !== 6) { $('joinError').textContent = 'Enter the full 6-character code.'; return; }
 
   const r = await api('GET', `/api/games/${encodeURIComponent(code)}/state`);
   if (r.status === 404) { $('joinError').textContent = 'No game found with that code.'; return; }
@@ -321,7 +321,7 @@ function init() {
   $('btnJoinSubmit').addEventListener('click', submitJoinCode);
   $('btnJoinBack').addEventListener('click', () => show('home'));
   $('joinCodeInput').addEventListener('input', (e) => {
-    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
   });
   $('joinCodeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitJoinCode(); });
   $('btnNameSubmit').addEventListener('click', submitName);
