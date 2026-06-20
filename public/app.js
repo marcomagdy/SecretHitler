@@ -132,6 +132,49 @@ async function newRound() {
   poll();
 }
 
+// --- Election actions -----------------------------------------------------
+
+async function beginPlay() {
+  const r = await api('POST', `/api/games/${encodeURIComponent(gameId)}/begin-play`, { playerId });
+  if (!r.ok) { toast('Could not begin elections.'); return; }
+  poll();
+}
+
+async function nominate() {
+  const presidentId = $('selPresident').value;
+  const chancellorId = $('selChancellor').value;
+  $('nominateError').textContent = '';
+  if (!presidentId || !chancellorId) { $('nominateError').textContent = 'Pick a President and a Chancellor.'; return; }
+  if (presidentId === chancellorId) { $('nominateError').textContent = 'President and Chancellor must be different.'; return; }
+  if (busy) return;
+  busy = true;
+  const r = await api('POST', `/api/games/${encodeURIComponent(gameId)}/nominate`,
+    { playerId, presidentId, chancellorId });
+  busy = false;
+  if (!r.ok) { $('nominateError').textContent = r.data.error || 'Could not open the vote.'; return; }
+  poll();
+}
+
+async function castVote(choice) {
+  if (busy) return;
+  busy = true;
+  setVoteButtonsDisabled(true);
+  const r = await api('POST', `/api/games/${encodeURIComponent(gameId)}/vote`, { playerId, choice });
+  busy = false;
+  if (!r.ok) {
+    setVoteButtonsDisabled(false);
+    toast(r.data.error || 'Could not record your vote.');
+    return;
+  }
+  poll();
+}
+
+async function advanceElection() {
+  const r = await api('POST', `/api/games/${encodeURIComponent(gameId)}/election/advance`, { playerId });
+  if (!r.ok) { toast('Could not advance.'); return; }
+  poll();
+}
+
 function leaveGame() {
   stopPolling();
   // Fire-and-forget: tell the server the player left before wiping local state.
@@ -183,6 +226,7 @@ async function poll() {
 }
 
 function route(state) {
+  if (state.phase === 'play') { renderPlay(state); return; }
   if (!state.you.role) {
     show('role');
     setRoleButtonsDisabled(busy);
@@ -311,6 +355,165 @@ function renderReveal(el, reveal) {
   }
 }
 
+// --- Election (play phase) renderers --------------------------------------
+
+const VOTE_LABEL = { ja: 'Ja!', nein: 'Nein!' };
+
+function showPlayPane(id) {
+  ['playNominate', 'playVoting', 'playReveal'].forEach((p) =>
+    $(p).classList.toggle('hidden', p !== id));
+}
+
+function renderTracker(el, n) {
+  el.innerHTML = '<span class="tracker-label">Failed elections</span>';
+  for (let i = 0; i < 3; i++) {
+    const pip = document.createElement('span');
+    pip.className = 'tracker-pip' + (i < n ? ' filled' : '');
+    el.appendChild(pip);
+  }
+}
+
+function renderPlay(state) {
+  show('play');
+  const e = state.election;
+  if (!e) { showPlayPane('playNominate'); return; }
+  if (!e.active) { renderNominate(state, e); return; }
+  if (!e.allVoted) { renderVoting(state, e); return; }
+  renderElectionReveal(state, e);
+}
+
+function renderNominate(state, e) {
+  showPlayPane('playNominate');
+  renderTracker($('electionTrackerNom'), e.electionTracker);
+  $('lastGov').textContent = e.lastGovernment
+    ? `Last government — President ${e.lastGovernment.presidentName}, ` +
+      `Chancellor ${e.lastGovernment.chancellorName} (term-limited this round).`
+    : 'No government has been elected yet.';
+
+  // Only rebuild the dropdowns when the roster/eligibility actually changes,
+  // so polling doesn't wipe the nominator's in-progress selection.
+  const sig = JSON.stringify({ c: e.candidates, i: e.ineligibleChancellorIds, y: state.you.id });
+  const pane = $('playNominate');
+  if (pane.dataset.sig !== sig) {
+    pane.dataset.sig = sig;
+    buildPresidentSelect(e.candidates, state.you.id);
+    buildChancellorSelect(e.candidates, e.ineligibleChancellorIds);
+    syncChancellorDisabled();
+  }
+}
+
+function buildPresidentSelect(candidates, youId) {
+  const sel = $('selPresident');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  candidates.forEach((c) => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+  if (candidates.some((c) => c.id === prev)) sel.value = prev;
+  else if (candidates.some((c) => c.id === youId)) sel.value = youId;
+  else sel.value = candidates[0] ? candidates[0].id : '';
+}
+
+function buildChancellorSelect(candidates, ineligible) {
+  const sel = $('selChancellor');
+  const prev = sel.value;
+  const inel = new Set(ineligible);
+  sel.innerHTML = '';
+  candidates.forEach((c) => {
+    const o = document.createElement('option');
+    o.value = c.id;
+    o.textContent = c.name + (inel.has(c.id) ? ' — term-limited' : '');
+    o.dataset.term = inel.has(c.id) ? '1' : '';
+    sel.appendChild(o);
+  });
+  if (candidates.some((c) => c.id === prev) && !inel.has(prev)) sel.value = prev;
+  else {
+    const firstOk = candidates.find((c) => !inel.has(c.id));
+    sel.value = firstOk ? firstOk.id : '';
+  }
+}
+
+// The President can't also be the Chancellor — disable that option live.
+function syncChancellorDisabled() {
+  const pres = $('selPresident').value;
+  const sel = $('selChancellor');
+  let reselect = false;
+  [...sel.options].forEach((o) => {
+    o.disabled = o.dataset.term === '1' || o.value === pres;
+    if (o.disabled && o.selected) reselect = true;
+  });
+  if (reselect) {
+    const firstOk = [...sel.options].find((o) => !o.disabled);
+    sel.value = firstOk ? firstOk.value : '';
+  }
+}
+
+function setVoteButtonsDisabled(disabled) {
+  document.querySelectorAll('#voteButtons .vote-btn').forEach((b) => { b.disabled = disabled; });
+}
+
+function renderVoting(state, e) {
+  showPlayPane('playVoting');
+  $('votePresident').textContent = e.presidentName;
+  $('voteChancellor').textContent = e.chancellorName;
+
+  document.querySelectorAll('#voteButtons .vote-btn').forEach((b) => {
+    b.classList.toggle('selected', e.yourVote === b.dataset.choice);
+    b.disabled = busy;
+  });
+  $('voteYour').textContent = e.youVoted
+    ? `You voted ${VOTE_LABEL[e.yourVote]} — you can change it until everyone has voted.`
+    : 'Cast your vote — votes stay hidden until everyone is in.';
+  $('voteProgress').textContent = `${e.votedCount} of ${e.totalPlayers} voted`;
+
+  const ul = $('voteRoster');
+  ul.innerHTML = '';
+  e.roster.forEach((p) => {
+    const li = document.createElement('li');
+    li.className = 'roster-item' + (p.voted ? ' ready' : '');
+    li.innerHTML = '<span class="dot"></span><span class="pname"></span><span class="pstatus"></span>';
+    li.querySelector('.pname').textContent = p.name;
+    li.querySelector('.pstatus').textContent = p.voted ? 'voted' : 'thinking…';
+    ul.appendChild(li);
+  });
+}
+
+function renderElectionReveal(state, e) {
+  showPlayPane('playReveal');
+  const passed = e.result === 'passed';
+  const rr = $('revealResult');
+  rr.className = 'reveal-result ' + (passed ? 'passed' : 'failed');
+  rr.textContent = passed ? 'Government ELECTED' : 'Government REJECTED';
+  $('revealPresident').textContent = e.presidentName;
+  $('revealChancellor').textContent = e.chancellorName;
+
+  const t = $('revealTally');
+  t.innerHTML = '';
+  [['ja', 'Ja!'], ['nein', 'Nein!']].forEach(([k, label]) => {
+    const chip = document.createElement('div');
+    chip.className = 'count-chip vote-' + k;
+    chip.innerHTML = '<div class="count-num"></div><div class="count-label"></div>';
+    chip.querySelector('.count-num').textContent = e.tally[k];
+    chip.querySelector('.count-label').textContent = label;
+    t.appendChild(chip);
+  });
+
+  const ul = $('revealBallots');
+  ul.innerHTML = '';
+  e.ballots.forEach((b) => {
+    const li = document.createElement('li');
+    li.className = 'ballot ' + b.choice;
+    li.innerHTML = '<span class="pname"></span><span class="bchoice"></span>';
+    li.querySelector('.pname').textContent = b.name;
+    li.querySelector('.bchoice').textContent = VOTE_LABEL[b.choice];
+    ul.appendChild(li);
+  });
+
+  renderTracker($('electionTrackerReveal'), e.electionTracker);
+}
+
 // --- Wire up --------------------------------------------------------------
 
 function init() {
@@ -331,6 +534,17 @@ function init() {
   $('btnNewRound').addEventListener('click', newRound);
   $('btnLeave').addEventListener('click', leaveGame);
   $('btnLeaveWaiting').addEventListener('click', leaveGame);
+
+  // Elections
+  $('btnBeginPlay').addEventListener('click', beginPlay);
+  $('btnNominate').addEventListener('click', nominate);
+  $('selPresident').addEventListener('change', syncChancellorDisabled);
+  document.querySelectorAll('#voteButtons .vote-btn').forEach((b) =>
+    b.addEventListener('click', () => castVote(b.dataset.choice)));
+  $('btnNextElection').addEventListener('click', advanceElection);
+  $('btnRedeal').addEventListener('click', newRound);
+  $('btnLeavePlay1').addEventListener('click', leaveGame);
+  $('btnLeavePlay2').addEventListener('click', leaveGame);
 
   // Resume an existing session on reload.
   if (gameId && playerId) { setGameTag(gameId); startPolling(); }

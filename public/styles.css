@@ -259,3 +259,103 @@ html, body {
 }
 
 .hidden { display: none !important; }
+
+/* --- Elections (play phase) --- */
+.play-pane { animation: fade 0.18s ease; }
+
+.field-label {
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 16px 2px 6px;
+}
+.select { font-size: 17px; appearance: none; cursor: pointer; }
+.select option:disabled { color: var(--muted); }
+
+.muted-line { color: var(--muted); font-size: 13px; margin: 4px 2px 0; }
+
+/* Election tracker pips */
+.tracker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin: 6px 0 4px;
+}
+.tracker-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+.tracker-pip {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--panel);
+}
+.tracker-pip.filled { background: var(--red-2); border-color: var(--red-2); }
+
+/* Government card (President + Chancellor) */
+.govt-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 14px 0;
+}
+.govt-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.govt-row + .govt-row { border-top: 1px solid var(--line); }
+.govt-role { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.govt-name { font-size: 18px; font-weight: 700; }
+
+/* Ja / Nein buttons */
+.vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 8px 0; }
+.vote-btn {
+  padding: 22px 0;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius);
+  border: 2px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.06s ease, background 0.15s ease;
+}
+.vote-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.vote-btn:disabled { opacity: 0.5; cursor: default; }
+.vote-btn.ja.selected { background: var(--green); border-color: var(--green); }
+.vote-btn.nein.selected { background: var(--red); border-color: var(--red); }
+.vote-your { text-align: center; color: var(--muted); font-size: 14px; margin: 6px 0 2px; }
+
+/* Vote tally chips reuse .count-chip */
+.count-chip.vote-ja   { border-top: 4px solid var(--green); }
+.count-chip.vote-nein { border-top: 4px solid var(--red-2); }
+
+/* Public ballot list */
+.ballots { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ballot {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+.ballot .pname { font-weight: 600; }
+.ballot .bchoice { font-weight: 800; letter-spacing: 0.03em; }
+.ballot.ja   { border-left: 5px solid var(--green); }
+.ballot.ja .bchoice   { color: var(--green); }
+.ballot.nein { border-left: 5px solid var(--red-2); }
+.ballot.nein .bchoice { color: var(--red-2); }
+
+/* Election outcome banner */
+.reveal-result {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 4px 0 10px;
+}
+.reveal-result.passed { background: rgba(74, 157, 91, 0.18); border: 1px solid var(--green); color: #cdeccf; }
+.reveal-result.failed { background: rgba(231, 76, 60, 0.16); border: 1px solid var(--red-2); color: #f3c9c3; }

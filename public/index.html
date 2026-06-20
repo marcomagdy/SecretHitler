@@ -96,10 +96,67 @@
         <div id="resultsYourRole" class="your-role"></div>
         <div id="resultsReveal" class="reveal"></div>
         <div class="stack">
-          <button id="btnNewRound" class="btn btn-primary">New round</button>
+          <button id="btnBeginPlay" class="btn btn-primary">Begin elections</button>
+          <button id="btnNewRound" class="btn btn-ghost">New round</button>
           <button id="btnLeave" class="btn btn-ghost btn-small">Leave game</button>
         </div>
         <p class="hint">Game code: <strong id="resultsCode">—</strong></p>
+      </section>
+
+      <!-- PLAY (elections) -->
+      <section id="play" class="screen">
+        <!-- NOMINATE sub-screen -->
+        <div id="playNominate" class="play-pane">
+          <p class="lead">Nominate a government</p>
+          <div id="electionTrackerNom" class="tracker"></div>
+          <p id="lastGov" class="muted-line"></p>
+          <label class="field-label">President</label>
+          <select id="selPresident" class="input select"></select>
+          <label class="field-label">Chancellor</label>
+          <select id="selChancellor" class="input select"></select>
+          <p id="nominateError" class="error"></p>
+          <div class="stack">
+            <button id="btnNominate" class="btn btn-primary">Open the vote</button>
+            <button id="btnRedeal" class="btn btn-ghost btn-small">Re-deal roles (new game)</button>
+            <button id="btnLeavePlay1" class="btn btn-ghost btn-small">Leave game</button>
+          </div>
+        </div>
+
+        <!-- VOTING sub-screen -->
+        <div id="playVoting" class="play-pane">
+          <p class="lead">Vote on the government</p>
+          <div class="govt-card">
+            <div class="govt-row"><span class="govt-role">President</span>
+              <span id="votePresident" class="govt-name"></span></div>
+            <div class="govt-row"><span class="govt-role">Chancellor</span>
+              <span id="voteChancellor" class="govt-name"></span></div>
+          </div>
+          <div id="voteButtons" class="vote-grid">
+            <button class="vote-btn ja" data-choice="ja">Ja!</button>
+            <button class="vote-btn nein" data-choice="nein">Nein!</button>
+          </div>
+          <p id="voteYour" class="vote-your"></p>
+          <p id="voteProgress" class="progress">—</p>
+          <ul id="voteRoster" class="roster"></ul>
+        </div>
+
+        <!-- REVEAL sub-screen -->
+        <div id="playReveal" class="play-pane">
+          <p id="revealResult" class="reveal-result"></p>
+          <div class="govt-card">
+            <div class="govt-row"><span class="govt-role">President</span>
+              <span id="revealPresident" class="govt-name"></span></div>
+            <div class="govt-row"><span class="govt-role">Chancellor</span>
+              <span id="revealChancellor" class="govt-name"></span></div>
+          </div>
+          <div id="revealTally" class="counts"></div>
+          <ul id="revealBallots" class="ballots"></ul>
+          <div id="electionTrackerReveal" class="tracker"></div>
+          <div class="stack">
+            <button id="btnNextElection" class="btn btn-primary">Next election</button>
+            <button id="btnLeavePlay2" class="btn btn-ghost btn-small">Leave game</button>
+          </div>
+        </div>
       </section>
     </main>
 
