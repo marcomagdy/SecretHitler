@@ -239,6 +239,11 @@ function pruneOldGames() {
   if (old.length === 0) return;
   const ids = old.map((g) => g.id);
   const placeholders = ids.map(() => '?').join(',');
+  db.prepare(
+    `DELETE FROM votes WHERE election_id IN
+       (SELECT id FROM elections WHERE game_id IN (${placeholders}))`
+  ).run(...ids);
+  db.prepare(`DELETE FROM elections WHERE game_id IN (${placeholders})`).run(...ids);
   db.prepare(`DELETE FROM players WHERE game_id IN (${placeholders})`).run(...ids);
   db.prepare(`DELETE FROM games WHERE id IN (${placeholders})`).run(...ids);
   console.log(`Pruned ${ids.length} old game(s): ${ids.join(', ')}`);
