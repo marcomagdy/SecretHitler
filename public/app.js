@@ -130,12 +130,27 @@ function goName() {
   setTimeout(() => $('nameInput').focus(), 50);
 }
 
+// Abandon a pending (not-yet-joined) game from the name screen and go home,
+// clearing the stored game so a reload doesn't strand us back here.
+function cancelNameEntry() {
+  gameId = LS.gameId = null;
+  playerId = LS.playerId = null;
+  setGameTag(null);
+  show('home');
+}
+
 async function submitName() {
   const name = $('nameInput').value.trim();
   if (!name) { $('nameError').textContent = 'Please enter your name.'; return; }
 
   const r = await api('POST', `/api/games/${encodeURIComponent(gameId)}/join`, { name });
-  if (r.status === 404) { $('nameError').textContent = 'That game no longer exists.'; return; }
+  if (r.status === 404) {
+    // The game was pruned or never existed — drop the stale session and bail
+    // back home instead of leaving the player stuck on this screen.
+    toast('That game no longer exists.');
+    cancelNameEntry();
+    return;
+  }
   if (!r.ok) { $('nameError').textContent = r.data.error || 'Could not join.'; return; }
 
   playerId = LS.playerId = r.data.playerId;
@@ -600,6 +615,7 @@ function init() {
   });
   $('joinCodeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitJoinCode(); });
   $('btnNameSubmit').addEventListener('click', submitName);
+  $('btnNameBack').addEventListener('click', cancelNameEntry);
   $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitName(); });
   document.querySelectorAll('#role .role-card').forEach((b) =>
     b.addEventListener('click', () => chooseRole(b.dataset.role)));
