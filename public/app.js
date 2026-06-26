@@ -219,10 +219,38 @@ function leaveGame() {
   show('home');
 }
 
+// Copy text to the clipboard. The async Clipboard API only works in secure
+// contexts (HTTPS / localhost), so over a plain-HTTP LAN address we fall back
+// to the legacy execCommand path, which works on insecure origins too.
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) { /* fall through to the legacy path */ }
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (_) {
+    return false;
+  }
+}
+
 async function copyCode() {
   const code = $('codeDisplay').textContent;
-  try { await navigator.clipboard.writeText(code); toast('Code copied!'); }
-  catch (_) { toast('Copy unavailable — the code is ' + code); }
+  if (await copyText(code)) toast('Code copied!');
+  else toast('Copy unavailable — the code is ' + code);
 }
 
 function inviteUrl(code) {
@@ -232,8 +260,8 @@ function inviteUrl(code) {
 async function copyLink() {
   if (!gameId) return;
   const url = inviteUrl(gameId);
-  try { await navigator.clipboard.writeText(url); toast('Invite link copied!'); }
-  catch (_) { toast('Copy unavailable — ' + url); }
+  if (await copyText(url)) toast('Invite link copied!');
+  else toast('Copy unavailable — long-press the link above to copy it');
 }
 
 // --- Polling & routing ----------------------------------------------------
