@@ -29,7 +29,9 @@ Delete that file to wipe all games.
 
 ## How a game flows
 
-1. **Start a game** → you get a 6-character code to share. **Join a game** → enter that code.
+1. **Start a game** → you get a 6-character code plus a shareable invite link
+   (`/join/<code>`). Send either one. **Join a game** → enter the code, or just
+   open someone's invite link to skip straight to entering your name.
 2. Enter your **name**.
 3. Choose the **role** you drew: Liberal, Fascist, or Hitler.
 4. The app polls the server until **everyone has chosen**.

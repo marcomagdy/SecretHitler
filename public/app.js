@@ -69,6 +69,7 @@ async function startGame() {
   gameId = LS.gameId = r.data.gameId;
   playerId = LS.playerId = null;
   $('codeDisplay').textContent = gameId;
+  $('inviteLink').textContent = inviteUrl(gameId);
   show('show-code');
 }
 
@@ -77,6 +78,36 @@ function goJoin() {
   $('joinCodeInput').value = '';
   show('join');
   setTimeout(() => $('joinCodeInput').focus(), 50);
+}
+
+// Read a game code from a /join/<code> invite link, if present.
+function inviteCodeFromPath() {
+  const m = location.pathname.match(/^\/join\/([A-Za-z0-9]+)\/?$/);
+  return m ? m[1].toUpperCase() : null;
+}
+
+// Someone followed an invite link: validate the code and send them to enter
+// their name. Falls back gracefully if the game is gone or unreachable.
+async function enterFromInvite(code) {
+  // Drop the /join/<code> path so a later reload returns to a clean URL.
+  history.replaceState(null, '', '/');
+
+  // Already in this exact game on this device? Just resume the session.
+  if (code === LS.gameId && LS.playerId) {
+    gameId = LS.gameId;
+    playerId = LS.playerId;
+    setGameTag(gameId);
+    startPolling();
+    return;
+  }
+
+  const r = await api('GET', `/api/games/${encodeURIComponent(code)}/state`);
+  if (r.status === 404) { toast('That game no longer exists.'); show('home'); return; }
+  if (!r.ok) { toast('Could not reach the server.'); show('home'); return; }
+
+  gameId = LS.gameId = code;
+  playerId = LS.playerId = null;
+  goName();
 }
 
 async function submitJoinCode() {
@@ -192,6 +223,17 @@ async function copyCode() {
   const code = $('codeDisplay').textContent;
   try { await navigator.clipboard.writeText(code); toast('Code copied!'); }
   catch (_) { toast('Copy unavailable — the code is ' + code); }
+}
+
+function inviteUrl(code) {
+  return `${location.origin}/join/${encodeURIComponent(code)}`;
+}
+
+async function copyLink() {
+  if (!gameId) return;
+  const url = inviteUrl(gameId);
+  try { await navigator.clipboard.writeText(url); toast('Invite link copied!'); }
+  catch (_) { toast('Copy unavailable — ' + url); }
 }
 
 // --- Polling & routing ----------------------------------------------------
@@ -520,6 +562,8 @@ function init() {
   $('btnStart').addEventListener('click', startGame);
   $('btnJoinHome').addEventListener('click', goJoin);
   $('btnCopyCode').addEventListener('click', copyCode);
+  $('btnCopyLink').addEventListener('click', copyLink);
+  $('btnCopyLinkWaiting').addEventListener('click', copyLink);
   $('btnCodeContinue').addEventListener('click', goName);
   $('btnJoinSubmit').addEventListener('click', submitJoinCode);
   $('btnJoinBack').addEventListener('click', () => show('home'));
@@ -546,8 +590,10 @@ function init() {
   $('btnLeavePlay1').addEventListener('click', leaveGame);
   $('btnLeavePlay2').addEventListener('click', leaveGame);
 
-  // Resume an existing session on reload.
-  if (gameId && playerId) { setGameTag(gameId); startPolling(); }
+  // Resume an existing session on reload, or honor a /join/<code> invite link.
+  const invite = inviteCodeFromPath();
+  if (invite) { enterFromInvite(invite); }
+  else if (gameId && playerId) { setGameTag(gameId); startPolling(); }
   else if (gameId) { goName(); }
   else show('home');
 }

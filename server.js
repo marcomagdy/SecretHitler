@@ -225,6 +225,12 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Invite links (/join/<code>) load the single-page app, which reads the code
+// from the path and sends the visitor straight to entering their name.
+app.get('/join/:code', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const normCode = (s) => String(s || '').trim().toUpperCase();
 
 function pruneOldGames() {

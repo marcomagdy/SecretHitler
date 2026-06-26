@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Secret Hitler — Roles</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="app">
@@ -25,11 +25,13 @@
 
       <!-- SHOW CODE (after Start) -->
       <section id="show-code" class="screen">
-        <p class="lead">Share this code with your table:</p>
+        <p class="lead">Share this game with your table:</p>
         <div id="codeDisplay" class="code-display">—</div>
+        <div id="inviteLink" class="invite-link" title="Invite link"></div>
         <div class="stack">
+          <button id="btnCopyLink" class="btn btn-primary">Copy invite link</button>
           <button id="btnCopyCode" class="btn btn-ghost">Copy code</button>
-          <button id="btnCodeContinue" class="btn btn-primary">Continue</button>
+          <button id="btnCodeContinue" class="btn btn-ghost">Continue</button>
         </div>
       </section>
 
@@ -84,6 +86,7 @@
         <ul id="waitingRoster" class="roster"></ul>
         <p class="hint">Anyone can still join with code <strong id="waitingCode">—</strong>.</p>
         <div class="stack">
+          <button id="btnCopyLinkWaiting" class="btn btn-ghost btn-small">Copy invite link</button>
           <button id="btnLeaveWaiting" class="btn btn-ghost btn-small">Leave game</button>
         </div>
       </section>
@@ -163,6 +166,6 @@
     <div id="toast" class="toast hidden"></div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

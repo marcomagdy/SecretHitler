@@ -135,6 +135,18 @@ html, body {
   box-shadow: var(--shadow);
 }
 
+/* Invite link */
+.invite-link {
+  margin: 12px 2px 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  word-break: break-all;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.invite-link:empty { display: none; }
+
 /* Role grid */
 .role-grid { display: flex; flex-direction: column; gap: 12px; }
 .role-card {
